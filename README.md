@@ -22,6 +22,8 @@ The two randomizations are independent from each other. It means a party could f
 
 It's a R code. I personally use Rstudio as I like a more visual interface but the code should absolutely work in R itself.
 
+Because of previous elections, the BC Liberals are coded as 1, NDP as 2, Green as 3, BC Cons. as 4 and independents as 5.
+
 You need the code as well as a few files, all provided:
 
 a) Results of the 2017 election, per riding.

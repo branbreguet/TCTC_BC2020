@@ -1,25 +1,25 @@
 #BC 2020#
 
 results<-read.csv(file.choose(), header=TRUE) #pick csv file called results
-adjustments<-read.csv(file.choose(), header=TRUE) #pick adjustment file. They are in percentages.
+adjustments<-read.csv(file.choose(), header=TRUE) #pick adjustment file. They are in percentages. Also contains whether there is a Cons. or Green candidate
 
 n=400 # sample size, corresponding to MoE of 4.8% for a party at 40%. Consistent with historical polling accuracy
 N=2000 #number of simulations. My computer has no issue with 2000 but takes about 30s for 10k
 nr=87 # number of ridings
-pr=c(35.5,43.5,12,6.5) #current voting intentions. BC Lib, NDP, Green and Conservatives. No need for 'others'
+pr=c(37.6, 47.5, 12.5, 1.1) #current voting intentions. BC Lib, NDP, Green and Conservatives. No need for 'others'
 sumpr=sum(pr)
 pr2=c(pr,100-sumpr) # so that it adds to 100% with others
 
 # Randomize at the provincial level
 r=100*t(rmultinom(N, n, prob = pr2))/n
 
-s=c(40.4,40.3,16.8,0.5) # past election results at the aggregate level
+s=c(40.3,40.3,16,1.2) # past election results at the aggregate level. They are adjusted for Green and Conservatives not always running full slate
 
 
 swing1=(r[,1]-s[1])
 swing2=(r[,2]-s[2])
-swing3=(r[,3]-s[3])
-swing4=(r[,4]-s[4])
+swing3=(r[,3]-s[3])*87/74
+swing4=(r[,4]-s[4])*87/19 #They only run candidates in 19 ridings. Provincial swing isn't fully representative and has to be scaled
 
 swing=cbind(swing1, swing2, swing3, swing4)
 
@@ -48,12 +48,14 @@ for (i in 1:N) {
 }
 proj3[proj3<0]=0
 proj3[proj3>100]=100
+proj3=proj3*adjustments[,6]
 
 for (i in 1:N) {
   proj4[,i]=results[,4]+swing4[i]+adjustments[,4]*100
 }
 proj4[proj4<0]=0
 proj4[proj4>100]=100
+proj4=proj4*adjustments[,7]
 
 for (i in 1:N) {
   proj5[,i]=adjustments[,5]*100
@@ -112,9 +114,9 @@ sumwin5=rowSums(t(win5))
 
 outcome=matrix(0,4,1)
 outcome[1]=sum(sumwin1>=44) # Lib majority
-outcome[2]=sum(sumwin1<44 & sumwin1>=sumwin2) # Lib plurality
+outcome[2]=sum(sumwin1<44 & sumwin1>sumwin2) # Lib plurality
 outcome[3]=sum(sumwin1==sumwin2) # Tie
-outcome[4]=sum(sumwin2<44 & sumwin2>=sumwin1) # NDP plurality
+outcome[4]=sum(sumwin2<44 & sumwin2>sumwin1) # NDP plurality
 outcome[5]=sum(sumwin2>=44) # NDP majority
 
 outcome
@@ -122,25 +124,10 @@ outcome
 
 #Probabilities to win each riding
 
-for (i in 1:N) {
-  sumwin1riding=rowSums(win1)
-}
-
-for (i in 1:N) {
-  sumwin2riding=rowSums(win2)
-}
-
-for (i in 1:N) {
-  sumwin3riding=rowSums(win3)
-}
-
-for (i in 1:N) {
-  sumwin4riding=rowSums(win4)
-}
-
-for (i in 1:N) {
-  sumwin5riding=rowSums(win5)
-}
+sumwin1riding=rowSums(win1)
+sumwin2riding=rowSums(win2)
+sumwin3riding=rowSums(win3)
+sumwin4riding=rowSums(win4)
+sumwin5riding=rowSums(win5)
 
 probwinriding=cbind(sumwin1riding, sumwin2riding, sumwin3riding, sumwin4riding, sumwin5riding)*1/N # chances of winning each riding
-
